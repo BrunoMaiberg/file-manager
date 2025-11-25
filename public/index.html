@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>File Manager - Gerenciador de Arquivos</title>
+  <meta name="description" content="Gerenciador de arquivos moderno com upload, download e gerenciamento de pastas">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-content">
+        <h1 class="logo">
+          <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+          </svg>
+          File Manager
+        </h1>
+        
+        <div class="header-actions">
+          <div class="search-container">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="m21 21-4.35-4.35"/>
+            </svg>
+            <input type="text" id="searchInput" class="search-input" placeholder="Buscar arquivos...">
+          </div>
+          
+          <div class="sort-container">
+            <svg class="sort-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 6h18M7 12h10m-7 6h4"/>
+            </svg>
+            <select id="sortSelect" class="sort-select">
+              <option value="name">Nome</option>
+              <option value="date">Data</option>
+              <option value="size">Tamanho</option>
+              <option value="type">Tipo</option>
+            </select>
+            <button id="sortDirectionBtn" class="btn-icon" title="Alternar ordem">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 5v14M5 12l7 7 7-7"/>
+              </svg>
+            </button>
+          </div>
+          
+          <button id="uploadBtn" class="btn btn-primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+            </svg>
+            Upload
+          </button>
+          
+          <button id="newFolderBtn" class="btn btn-secondary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/>
+              <line x1="12" y1="11" x2="12" y2="17"/>
+              <line x1="9" y1="14" x2="15" y2="14"/>
+            </svg>
+            Nova Pasta
+          </button>
+          
+          <button id="settingsBtn" class="btn btn-secondary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"/>
+            </svg>
+            Configurações
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Breadcrumb Navigation -->
+    <nav class="breadcrumb" id="breadcrumb">
+      <button class="breadcrumb-item" data-path="">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="m3 9 9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+        </svg>
+        Início
+      </button>
+    </nav>
+
+    <!-- Upload Progress Container -->
+    <div id="uploadProgressContainer" class="upload-progress-container hidden">
+      <div class="upload-progress-item">
+        <div class="upload-progress-header">
+          <span class="upload-file-name" id="uploadFileName">Uploading...</span>
+          <button class="btn-close-progress" id="cancelUploadBtn" title="Cancelar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        <div class="upload-progress-bar">
+          <div class="upload-progress-fill" id="uploadProgressFill"></div>
+        </div>
+        <div class="upload-progress-info">
+          <span id="uploadProgressText">0%</span>
+          <span id="uploadSpeed"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Drop Zone Overlay -->
+      <div id="dropZone" class="drop-zone hidden">
+        <div class="drop-zone-content">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+          </svg>
+          <h2>Solte os arquivos aqui</h2>
+          <p>Para fazer upload</p>
+        </div>
+      </div>
+
+      <!-- File Grid -->
+      <div id="fileGrid" class="file-grid">
+        <!-- Files will be loaded here -->
+      </div>
+
+      <!-- Empty State -->
+      <div id="emptyState" class="empty-state hidden">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+        </svg>
+        <h2>Pasta vazia</h2>
+        <p>Faça upload de arquivos ou crie uma nova pasta</p>
+      </div>
+      
+      <!-- Footer Branding -->
+      <footer class="footer-branding">
+        FMS powered by <a href="https://Maiberg.tec.br" target="_blank" rel="noopener">Maiberg.tec.br</a>
+      </footer>
+    </main>
+
+    <!-- Context Menu -->
+    <div id="contextMenu" class="context-menu hidden">
+      <button class="context-menu-item" data-action="download">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+        </svg>
+        Download
+      </button>
+      <button class="context-menu-item" data-action="rename">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+          <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+        </svg>
+        Renomear
+      </button>
+      <button class="context-menu-item" data-action="copy">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+          <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+        </svg>
+        Copiar
+      </button>
+      <button class="context-menu-item" data-action="move">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="5 9 2 12 5 15"/>
+          <polyline points="9 5 12 2 15 5"/>
+          <polyline points="15 19 12 22 9 19"/>
+          <polyline points="19 9 22 12 19 15"/>
+          <line x1="2" y1="12" x2="22" y2="12"/>
+          <line x1="12" y1="2" x2="12" y2="22"/>
+        </svg>
+        Mover
+      </button>
+      <div class="context-menu-divider"></div>
+      <button class="context-menu-item danger" data-action="delete">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="3 6 5 6 21 6"/>
+          <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+        </svg>
+        Excluir
+      </button>
+    </div>
+
+    <!-- Modal -->
+    <div id="modal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="modalTitle">Modal</h2>
+          <button id="modalClose" class="modal-close">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        <div class="modal-body" id="modalBody">
+          <!-- Modal content will be inserted here -->
+        </div>
+        <div class="modal-footer" id="modalFooter">
+          <!-- Modal buttons will be inserted here -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal hidden">
+      <div class="modal-content settings-modal">
+        <div class="modal-header">
+          <h2>Configurações</h2>
+          <button id="settingsClose" class="modal-close">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <!-- Theme Selection -->
+          <div class="settings-section">
+            <h3 class="settings-title">Tema de Cores</h3>
+            <p class="settings-description">Escolha o tema que mais combina com você</p>
+            <div class="theme-grid">
+              <button class="theme-card active" data-theme="default">
+                <div class="theme-preview">
+                  <div class="theme-color" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)"></div>
+                  <div class="theme-color" style="background: #0a0e1a"></div>
+                  <div class="theme-color" style="background: #131824"></div>
+                </div>
+                <span class="theme-name">Padrão</span>
+                <div class="theme-check">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </div>
+              </button>
+              
+              <button class="theme-card" data-theme="ocean">
+                <div class="theme-preview">
+                  <div class="theme-color" style="background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)"></div>
+                  <div class="theme-color" style="background: #0c1821"></div>
+                  <div class="theme-color" style="background: #1a2332"></div>
+                </div>
+                <span class="theme-name">Oceano</span>
+                <div class="theme-check">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </div>
+              </button>
+              
+              <button class="theme-card" data-theme="sunset">
+                <div class="theme-preview">
+                  <div class="theme-color" style="background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)"></div>
+                  <div class="theme-color" style="background: #1a0f0a"></div>
+                  <div class="theme-color" style="background: #2a1a14"></div>
+                </div>
+                <span class="theme-name">Pôr do Sol</span>
+                <div class="theme-check">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </div>
+              </button>
+              
+              <button class="theme-card" data-theme="forest">
+                <div class="theme-preview">
+                  <div class="theme-color" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%)"></div>
+                  <div class="theme-color" style="background: #0a1410"></div>
+                  <div class="theme-color" style="background: #14241c"></div>
+                </div>
+                <span class="theme-name">Floresta</span>
+                <div class="theme-check">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </div>
+              </button>
+              
+              <button class="theme-card" data-theme="rose">
+                <div class="theme-preview">
+                  <div class="theme-color" style="background: linear-gradient(135deg, #ec4899 0%, #a855f7 100%)"></div>
+                  <div class="theme-color" style="background: #1a0a14"></div>
+                  <div class="theme-color" style="background: #2a1424"></div>
+                </div>
+                <span class="theme-name">Rosa</span>
+                <div class="theme-check">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </div>
+              </button>
+              
+              <button class="theme-card" data-theme="midnight">
+                <div class="theme-preview">
+                  <div class="theme-color" style="background: linear-gradient(135deg, #6366f1 0%, #1e293b 100%)"></div>
+                  <div class="theme-color" style="background: #020617"></div>
+                  <div class="theme-color" style="background: #0f172a"></div>
+                </div>
+                <span class="theme-name">Meia-Noite</span>
+                <div class="theme-check">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </div>
+              </button>
+              
+              <button class="theme-card" data-theme="default-minimal">
+                <div class="theme-preview">
+                  <div class="theme-color" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)"></div>
+                  <div class="theme-color" style="background: #f8fafc"></div>
+                  <div class="theme-color" style="background: #ffffff"></div>
+                </div>
+                <span class="theme-name">Padrão Minimal</span>
+                <div class="theme-check">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </div>
+              </button>
+              
+              <button class="theme-card" data-theme="ocean-minimal">
+                <div class="theme-preview">
+                  <div class="theme-color" style="background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)"></div>
+                  <div class="theme-color" style="background: #f0f9ff"></div>
+                  <div class="theme-color" style="background: #ffffff"></div>
+                </div>
+                <span class="theme-name">Oceano Minimal</span>
+                <div class="theme-check">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </div>
+              </button>
+              
+              <button class="theme-card" data-theme="sunset-minimal">
+                <div class="theme-preview">
+                  <div class="theme-color" style="background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)"></div>
+                  <div class="theme-color" style="background: #fff7ed"></div>
+                  <div class="theme-color" style="background: #ffffff"></div>
+                </div>
+                <span class="theme-name">Pôr do Sol Minimal</span>
+                <div class="theme-check">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </div>
+              </button>
+              
+              <button class="theme-card" data-theme="forest-minimal">
+                <div class="theme-preview">
+                  <div class="theme-color" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%)"></div>
+                  <div class="theme-color" style="background: #f0fdf4"></div>
+                  <div class="theme-color" style="background: #ffffff"></div>
+                </div>
+                <span class="theme-name">Floresta Minimal</span>
+                <div class="theme-check">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </div>
+              </button>
+              
+              <button class="theme-card" data-theme="rose-minimal">
+                <div class="theme-preview">
+                  <div class="theme-color" style="background: linear-gradient(135deg, #ec4899 0%, #a855f7 100%)"></div>
+                  <div class="theme-color" style="background: #fdf4ff"></div>
+                  <div class="theme-color" style="background: #ffffff"></div>
+                </div>
+                <span class="theme-name">Rosa Minimal</span>
+                <div class="theme-check">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </div>
+              </button>
+              
+              <button class="theme-card" data-theme="midnight-minimal">
+                <div class="theme-preview">
+                  <div class="theme-color" style="background: linear-gradient(135deg, #6366f1 0%, #1e293b 100%)"></div>
+                  <div class="theme-color" style="background: #f8fafc"></div>
+                  <div class="theme-color" style="background: #ffffff"></div>
+                </div>
+                <span class="theme-name">Meia-Noite Minimal</span>
+                <div class="theme-check">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </div>
+              </button>
+              
+              <button class="theme-card" data-theme="gray-minimal">
+                <div class="theme-preview">
+                  <div class="theme-color" style="background: linear-gradient(135deg, #64748b 0%, #475569 100%)"></div>
+                  <div class="theme-color" style="background: #f8fafc"></div>
+                  <div class="theme-color" style="background: #ffffff"></div>
+                </div>
+                <span class="theme-name">Cinza Minimal</span>
+                <div class="theme-check">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </div>
+              </button>
+            </div>
+          </div>
+          
+          <!-- Logo Upload -->
+          <div class="settings-section">
+            <h3 class="settings-title">Logo Personalizada</h3>
+            <p class="settings-description">Faça upload da sua logo (PNG, JPG ou SVG)</p>
+            <div class="logo-upload-container">
+              <div class="logo-preview" id="logoPreview">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                </svg>
+              </div>
+              <div class="logo-upload-actions">
+                <button class="btn btn-primary" id="uploadLogoBtn">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                  </svg>
+                  Escolher Logo
+                </button>
+                <button class="btn btn-secondary" id="removeLogoBtn">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                  </svg>
+                  Remover
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hidden file inputs -->
+    <input type="file" id="fileInput" multiple hidden>
+    <input type="file" id="logoInput" accept="image/*" hidden>
+
+    <!-- Image Preview Modal -->
+    <div id="imagePreviewModal" class="modal hidden">
+      <div class="image-preview-content">
+        <button id="imagePreviewClose" class="modal-close image-preview-close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+        
+        <button id="imagePrevBtn" class="image-nav-btn image-prev-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+        </button>
+        
+        <div class="image-preview-container">
+          <img id="previewImage" src="" alt="Preview">
+        </div>
+        
+        <button id="imageNextBtn" class="image-nav-btn image-next-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </button>
+        
+        <div class="image-preview-footer">
+          <span id="imagePreviewName"></span>
+          <button id="imageDownloadBtn" class="btn btn-primary btn-sm">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+            </svg>
+            Download
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Video Player Modal -->
+    <div id="videoPlayerModal" class="modal hidden">
+      <div class="video-player-content">
+        <button id="videoPlayerClose" class="modal-close video-player-close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+        
+        <div class="video-player-container">
+          <video id="videoPlayer" controls>
+            Seu navegador não suporta reprodução de vídeo.
+          </video>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="toast-container"></div>
+  </div>
+
+  <script src="app.js?v=20251124k"></script>
+</body>
+</html>
