@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  file-manager:
+    build:
+      context: https://github.com/BrunoMaiberg/file-manager.git#main
+    container_name: file-manager
+    restart: unless-stopped
+    ports:
+      - "8181:8181"
+    volumes:
+      - file-manager-uploads:/app/uploads
+    environment:
+      - NODE_ENV=production
+
+volumes:
+  file-manager-uploads:
