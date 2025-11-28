@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  file-manager:
+    build: .
+    container_name: file-manager
+    restart: unless-stopped
+    ports:
+      - "8181:8181"
+    volumes:
+      - ./uploads:/app/uploads
+    networks:
+      - traefik
+    labels:
+      # Enable Traefik
+      - "traefik.enable=true"
+      
+      # HTTP Router
+      - "traefik.http.routers.file-manager.rule=Host(`fms.local.example.com`)"
+      - "traefik.http.routers.file-manager.entrypoints=web"
+      - "traefik.http.services.file-manager.loadbalancer.server.port=8181"
+      
+      # Optional: HTTPS (uncomment and configure if you have HTTPS setup)
+      # - "traefik.http.routers.file-manager-secure.rule=Host(`fms.local.example.com`)"
+      # - "traefik.http.routers.file-manager-secure.entrypoints=websecure"
+      # - "traefik.http.routers.file-manager-secure.tls=true"
+
+networks:
+  traefik:
+    external: true
