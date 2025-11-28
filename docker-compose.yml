@@ -2,28 +2,43 @@ version: '3.8'
 
 services:
   file-manager:
-    build: .
+    build:
+      context: https://github.com/BrunoMaiberg/file-manager.git#main
     container_name: file-manager
     restart: unless-stopped
     ports:
-      - "8181:8181"
+      - "8181:8181"  # Mantenha para acesso direto também
     volumes:
-      - ./uploads:/app/uploads
+      - file-manager-uploads:/app/uploads
+    environment:
+      - NODE_ENV=production
+      - PORT=8181
     networks:
       - traefik
     labels:
-      # Enable Traefik
+      # Habilitar Traefik
       - "traefik.enable=true"
       
-      # HTTP Router
-      - "traefik.http.routers.file-manager.rule=Host(`fms.local.example.com`)"
+      # Rede do Traefik
+      - "traefik.docker.network=traefik"
+      
+      # Router HTTP
+      - "traefik.http.routers.file-manager.rule=Host(`fms.local`)"
       - "traefik.http.routers.file-manager.entrypoints=web"
       - "traefik.http.services.file-manager.loadbalancer.server.port=8181"
       
-      # Optional: HTTPS (uncomment and configure if you have HTTPS setup)
-      # - "traefik.http.routers.file-manager-secure.rule=Host(`fms.local.example.com`)"
+      # Router HTTPS (descomente se tiver SSL)
+      # - "traefik.http.routers.file-manager-secure.rule=Host(`fms.local`)"
       # - "traefik.http.routers.file-manager-secure.entrypoints=websecure"
       # - "traefik.http.routers.file-manager-secure.tls=true"
+      # - "traefik.http.routers.file-manager-secure.service=file-manager"
+      
+      # Redirect HTTP para HTTPS (descomente se tiver SSL)
+      # - "traefik.http.routers.file-manager.middlewares=redirect-to-https"
+      # - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+
+volumes:
+  file-manager-uploads:
 
 networks:
   traefik:
