@@ -7,12 +7,13 @@ services:
     container_name: file-manager
     restart: unless-stopped
     ports:
-      - "8181:8181"  # Mantenha para acesso direto também
+      - "8181:8181"  # Acesso direto via IP:8181
     volumes:
       - file-manager-uploads:/app/uploads
     environment:
       - NODE_ENV=production
       - PORT=8181
+      - DOMAIN=${DOMAIN:-fms.local}  # Defina via variável de ambiente
     networks:
       - traefik
     labels:
@@ -23,19 +24,9 @@ services:
       - "traefik.docker.network=traefik"
       
       # Router HTTP
-      - "traefik.http.routers.file-manager.rule=Host(`fms.local`)"
+      - "traefik.http.routers.file-manager.rule=Host(`${DOMAIN:-fms.local}`)"
       - "traefik.http.routers.file-manager.entrypoints=web"
       - "traefik.http.services.file-manager.loadbalancer.server.port=8181"
-      
-      # Router HTTPS (descomente se tiver SSL)
-      # - "traefik.http.routers.file-manager-secure.rule=Host(`fms.local`)"
-      # - "traefik.http.routers.file-manager-secure.entrypoints=websecure"
-      # - "traefik.http.routers.file-manager-secure.tls=true"
-      # - "traefik.http.routers.file-manager-secure.service=file-manager"
-      
-      # Redirect HTTP para HTTPS (descomente se tiver SSL)
-      # - "traefik.http.routers.file-manager.middlewares=redirect-to-https"
-      # - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
 
 volumes:
   file-manager-uploads:
