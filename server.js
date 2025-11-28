@@ -9,7 +9,7 @@ const sharp = require('sharp');
 const ffmpeg = require('fluent-ffmpeg');
 
 const app = express();
-const PORT = 80;
+const PORT = process.env.PORT || 8181;
 
 // Middleware
 app.use(cors());
